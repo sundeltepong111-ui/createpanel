@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Server - Pterodactyl Panel</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #0f172a;
+      color: #fff;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #1e293b;
+      padding: 16px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+    }
+    main {
+      max-width: 600px;
+      margin: 20px auto;
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      border-radius: 8px;
+      border: none;
+      background-color: #334155;
+      color: white;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 16px;
+      width: 100%;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background: #2563eb;
+    }
+    pre {
+      background: #111827;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 15px;
+      max-height: 300px;
+      overflow: auto;
+    }
+  </style>
+</head>
+<body>
+  <header>Create Server - Pterodactyl Panel</header>
+  <main>
+    <label>Nama Server</label>
+    <input type="text" id="serverName" placeholder="contoh: Zulz Server">
+
+    <label>Egg ID</label>
+    <input type="number" id="eggId" placeholder="Contoh: 1">
+
+    <label>RAM (MB)</label>
+    <input type="number" id="memory" placeholder="Contoh: 512">
+
+    <label>CPU (%)</label>
+    <input type="number" id="cpu" placeholder="Contoh: 100">
+
+    <label>Disk (MB)</label>
+    <input type="number" id="disk" placeholder="Contoh: 1024">
+
+    <button onclick="createServer()">Buat Server</button>
+
+    <pre id="result"></pre>
+  </main>
+
+  <script>
+    const API_KEY = "ptla_YjgMD7WzieYTXHRqiksY7JOjyTUOtNsQS8rqatorgku"; // Ganti dengan Pterodactyl Application API Key
+    const PANEL_URL = "https://keabisanide.sallserver.web.id"; // Ganti dengan URL panel kamu
+
+    async function createServer() {
+      const name = document.getElementById("serverName").value;
+      const egg = document.getElementById("eggId").value;
+      const memory = document.getElementById("memory").value;
+      const cpu = document.getElementById("cpu").value;
+      const disk = document.getElementById("disk").value;
+
+      const payload = {
+        name,
+        user: 1, // ID user owner server di panel
+        nest: 1,
+        egg: parseInt(egg),
+        docker_image: "quay.io/pterodactyl/core:java-17",
+        startup: "java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar server.jar",
+        environment: {},
+        limits: {
+          memory: parseInt(memory),
+          swap: 0,
+          disk: parseInt(disk),
+          io: 500,
+          cpu: parseInt(cpu)
+        },
+        feature_limits: {
+          databases: 0,
+          allocations: 1
+        },
+        allocation: { default: 1 },
+        start_on_completion: true
+      };
+
+      try {
+        const res = await fetch(`${PANEL_URL}/api/application/servers`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${API_KEY}`,
+            "Content-Type": "application/json",
+            "Accept": "Application/vnd.pterodactyl.v1+json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        document.getElementById("result").textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        document.getElementById("result").textContent = `Error: ${error.message}`;
+      }
+    }
+  </script>
+</body>
+</html>
